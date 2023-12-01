@@ -1,0 +1,41 @@
+[gd_scene load_steps=6 format=3 uid="uid://c26akhhkehchy"]
+
+[ext_resource type="Texture2D" uid="uid://cncspb3dtr5t3" path="res://sprites/arrowProjectile-11-11-23.png" id="1_2cauk"]
+[ext_resource type="Script" path="res://items/arrow_projectile.gd" id="1_bs7d6"]
+[ext_resource type="Script" path="res://items/arrow_hurtbox.gd" id="3_n433y"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ifnot"]
+size = Vector2(12, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kdnjw"]
+size = Vector2(13, 7)
+
+[node name="arrow_projectile" type="CharacterBody2D"]
+collision_layer = 0
+collision_mask = 5
+script = ExtResource("1_bs7d6")
+
+[node name="arrow_hitbox" type="CollisionShape2D" parent="."]
+position = Vector2(1, 0.5)
+shape = SubResource("RectangleShape2D_ifnot")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_2cauk")
+
+[node name="arrow_hurtbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("3_n433y")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="arrow_hurtbox"]
+position = Vector2(1.5, 0.5)
+shape = SubResource("RectangleShape2D_kdnjw")
+debug_color = Color(0.627451, 0.52549, 0.219608, 0.419608)
+
+[node name="Timer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.1
+one_shot = true
+
+[connection signal="body_entered" from="arrow_hurtbox" to="." method="_on_arrow_hurtbox_body_entered"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

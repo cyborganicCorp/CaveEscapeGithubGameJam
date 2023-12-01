@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://cg4otc6tlwb8s"]
+
+[ext_resource type="Script" path="res://Area2D.gd" id="1_baxdj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ub8l4"]
+size = Vector2(32, 6)
+
+[node name="SpikeTrapDetectionZone" type="Area2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_baxdj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_ub8l4")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cfjx83rwkqnfi"]
+
+[ext_resource type="AudioStream" uid="uid://d4lxbul5lnnnx" path="res://audio/caveEscapeBGM-11-14-23.wav" id="1_sy147"]
+
+[node name="gameplay_bgm" type="AudioStreamPlayer"]
+stream = ExtResource("1_sy147")
+autoplay = true

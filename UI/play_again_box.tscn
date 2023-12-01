@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://dyp0eyy5hvrdi"]
+
+[ext_resource type="Texture2D" uid="uid://826ojcrf5vu8" path="res://sprites/template2-256w-128h.png" id="1_b3e3f"]
+[ext_resource type="Script" path="res://UI/play_again_box.gd" id="1_vudcf"]
+
+[node name="PlayAgainBox" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vudcf")
+
+[node name="ui_box" type="TextureRect" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 96.0
+offset_top = 60.0
+offset_right = 224.0
+offset_bottom = 124.0
+texture = ExtResource("1_b3e3f")
+expand_mode = 1
+
+[node name="play_again_btn" type="Button" parent="ui_box"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 16.0
+offset_right = 120.0
+offset_bottom = 48.0
+text = "Play Again?"
+
+[connection signal="pressed" from="ui_box/play_again_btn" to="." method="_on_button_pressed"]

@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3 uid="uid://chlk6fbf3nary"]
+
+[ext_resource type="Script" path="res://items/heart_item.gd" id="1_uyfbd"]
+[ext_resource type="Texture2D" uid="uid://d0llls2x55a70" path="res://sprites/pixelHeartSprite2.png" id="1_wdvbo"]
+[ext_resource type="AudioStream" uid="uid://dn441gnmgyoio" path="res://audio/caveEscapeHealthSFX-11-14-23.wav" id="3_f4fyr"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_b0xxx"]
+radius = 7.07107
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xgo1u"]
+radius = 8.0
+
+[node name="heart_item" type="StaticBody2D"]
+collision_layer = 8
+collision_mask = 5
+script = ExtResource("1_uyfbd")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_wdvbo")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_b0xxx")
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_mask = 4
+
+[node name="detection_zone" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("CircleShape2D_xgo1u")
+
+[node name="health_sfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_f4fyr")
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

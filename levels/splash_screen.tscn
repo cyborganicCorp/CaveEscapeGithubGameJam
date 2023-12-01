@@ -1,0 +1,62 @@
+[gd_scene load_steps=10 format=3 uid="uid://e8dwsate6xbk"]
+
+[ext_resource type="Texture2D" uid="uid://cl0btth6erf8b" path="res://sprites/mapSquarePlaceholder.png" id="1_ip4ep"]
+[ext_resource type="Script" path="res://levels/splash_screen.gd" id="1_tyrmb"]
+[ext_resource type="Texture2D" uid="uid://ja867g3s0dvr" path="res://sprites/cyborganicCorpSplashScreen-10-30-23.png" id="1_x565c"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_laswf"]
+atlas = ExtResource("1_x565c")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pumem"]
+atlas = ExtResource("1_x565c")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vvjc0"]
+atlas = ExtResource("1_x565c")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tbp57"]
+atlas = ExtResource("1_x565c")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ugleo"]
+atlas = ExtResource("1_x565c")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_7gc8n"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_laswf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pumem")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vvjc0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tbp57")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ugleo")
+}],
+"loop": true,
+"name": &"splash_screen",
+"speed": 10.0
+}]
+
+[node name="splash_screen" type="Node2D"]
+script = ExtResource("1_tyrmb")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(160, 90)
+scale = Vector2(20, 11.25)
+texture = ExtResource("1_ip4ep")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(160, 96)
+sprite_frames = SubResource("SpriteFrames_7gc8n")
+animation = &"splash_screen"
+autoplay = "splash_screen"

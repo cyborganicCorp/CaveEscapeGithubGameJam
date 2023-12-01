@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://crd5dxdqdirfs"]
+
+[ext_resource type="Script" path="res://UI/audio_players.gd" id="1_k1ehj"]
+[ext_resource type="AudioStream" uid="uid://c11d61ehnrw7" path="res://audio/caveEscapeMusic-11-9-23.wav" id="2_egdb5"]
+
+[node name="audio_players" type="Node2D"]
+script = ExtResource("1_k1ehj")
+
+[node name="bgm_player" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_egdb5")
+volume_db = -7.495
+autoplay = true

@@ -1,0 +1,80 @@
+[gd_scene load_steps=5 format=3 uid="uid://dghsce0acbk7d"]
+
+[ext_resource type="Script" path="res://levels/intro_scene.gd" id="1_slbnw"]
+
+[sub_resource type="Animation" id="Animation_adk1j"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationPlayer/Label2:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_g64q0"]
+resource_name = "fade"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationPlayer/Label2:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1, 1.2, 2),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_c52ri"]
+_data = {
+"RESET": SubResource("Animation_adk1j"),
+"fade": SubResource("Animation_g64q0")
+}
+
+[node name="intro_scene" type="Node2D"]
+script = ExtResource("1_slbnw")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_left = -11.0
+offset_top = -13.0
+offset_right = 329.0
+offset_bottom = 191.0
+color = Color(0, 0, 0, 1)
+
+[node name="Label" type="Label" parent="."]
+offset_left = 12.0
+offset_top = 20.0
+offset_right = 311.0
+offset_bottom = 150.0
+size_flags_horizontal = 4
+autowrap_mode = 2
+
+[node name="start_game_timer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+autoplay = "fade"
+libraries = {
+"": SubResource("AnimationLibrary_c52ri")
+}
+
+[node name="Label2" type="Label" parent="AnimationPlayer"]
+modulate = Color(1, 1, 1, 0)
+offset_right = 320.0
+offset_bottom = 182.0
+size_flags_horizontal = 4
+text = "- space to skip -"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[connection signal="timeout" from="start_game_timer" to="." method="_on_start_game_timer_timeout"]

@@ -1,0 +1,75 @@
+[gd_scene load_steps=6 format=3 uid="uid://c37fmycmdalls"]
+
+[ext_resource type="Texture2D" uid="uid://826ojcrf5vu8" path="res://sprites/template2-256w-128h.png" id="1_s0pk2"]
+[ext_resource type="Script" path="res://UI/dialogue_box.gd" id="1_trf2s"]
+
+[sub_resource type="Animation" id="Animation_63t3c"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_xscn5"]
+resource_name = "end_game_fade"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nwgu2"]
+_data = {
+"RESET": SubResource("Animation_63t3c"),
+"end_game_fade": SubResource("Animation_xscn5")
+}
+
+[node name="dialogue_box" type="Node2D"]
+script = ExtResource("1_trf2s")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(75.5, 41.25)
+scale = Vector2(0.386719, 0.519531)
+texture = ExtResource("1_s0pk2")
+
+[node name="Label" type="Label" parent="."]
+offset_left = 30.5
+offset_top = 14.5
+offset_right = 118.5
+offset_bottom = 67.5
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 8
+autowrap_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+self_modulate = Color(1, 1, 1, 0)
+offset_right = 322.0
+offset_bottom = 176.0
+color = Color(0, 0, 0, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_nwgu2")
+}
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true
+
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_animation_player_animation_finished"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

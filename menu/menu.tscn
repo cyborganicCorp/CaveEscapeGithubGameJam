@@ -1,0 +1,373 @@
+[gd_scene load_steps=4 format=3 uid="uid://dcnpew1lso5y7"]
+
+[ext_resource type="PackedScene" uid="uid://cjlpisfk1sg5n" path="res://UI/ui_box_tilemap.tscn" id="1_omrsp"]
+[ext_resource type="PackedScene" uid="uid://crd5dxdqdirfs" path="res://UI/audio_players.tscn" id="2_6imax"]
+
+[sub_resource type="GDScript" id="GDScript_1ou0b"]
+script/source = "extends Node2D
+var MapTile = preload(\"res://map_square.tscn\")
+var SelectionMarker = preload(\"res://selection_marker.tscn\")
+var QuestionMark = preload(\"res://sprites/questionMarkSprite-10-26-23.png\")
+var MapSprite = preload(\"res://sprites/cave-system-minimap-11-5-23.png\")
+var BlankTile = preload(\"res://sprites/mapSquarePlaceholder.png\")
+var EscapeTile = preload(\"res://sprites/star16x16.png\")
+var TileCount = 0
+var TileArray = []
+var userSelectionMarker
+var levels_completed : int = 0
+var easy_level_choices = []
+var difficult_level_choices = []
+
+@onready var label = $ui_box_tilemap3/Label
+
+func _ready():
+	userSelectionMarker = SelectionMarker.instantiate()
+	add_child(userSelectionMarker)
+	
+	for i in 4:
+		for j in 4:
+			#create a new instance of a map tile
+			var newTile = MapTile.instantiate()
+			#give the instance an x and y position based on which iteration it is in the loop
+			newTile.position.x = 16 * j
+			newTile.position.y = 16 * i
+			#assign the new instance a tile count number
+			newTile.MapSquareNum = TileCount
+			#get a reference to the new tiles sprite 2d component
+			var newTileSprite = newTile.get_child(0)
+			#set the sprite x and y position for the new tiles image
+			#since the map and the map sprite are the same size this works
+			newTile.MapTileImgPosition = newTile.position
+			
+			#give the remaining tiles a question mark sprite
+			if TileCount > 0:
+				newTileSprite.texture = BlankTile
+			#increase the tile count
+			TileCount+=1
+			#add the map tile to the menu as a child
+			add_child(newTile)
+			#add the map tile to the tile array
+			TileArray.append(newTile)
+	
+	#after the tilemap is done being set up a random tile will be selected to be the escape tile
+	
+	#if the map is being opened for the first time run this to open up the first level
+	if SaveItem.storedData == false:
+		initialize_level_choices()
+		PlayerStats.health = 3
+		TileArray[0].get_child(0).texture = QuestionMark
+		TileArray[0].canBeSelected = true
+		set_escapeSpace()
+	
+	#if data has been stored load that data
+	if SaveItem.storedData != false:
+		for i in TileArray.size():
+			TileArray[i].canBeSelected = SaveItem.tileData[i][0]
+			TileArray[i].hasBeenSelected = SaveItem.tileData[i][1]
+			TileArray[i].get_child(0).texture = SaveItem.tileData[i][2]
+			TileArray[i].isEscapeSpace = SaveItem.tileData[i][4]
+			TileArray[i].needsToBeReset = SaveItem.tileData[i][5]
+			#if the tile has been revealed on the map set the sprite bounds accordingly
+			if TileArray[i].get_child(0).texture == MapSprite:
+				TileArray[i].get_child(0).region_rect.position = SaveItem.tileData[i][3]
+				if TileArray[i].isEscapeSpace == false:
+					pass
+				else:
+					TileArray[i].get_child(0).texture = EscapeTile
+					TileArray[i].get_child(0).region_rect.position = Vector2(0,0)
+			#if the tile is the escape space set its texture
+	
+		#reset the user selection marker position
+		userSelectionMarker.position = SaveItem.selectorPosition
+		#increase the number of completed levels by 1
+		levels_completed = SaveItem.levels_completed
+		levels_completed+=1
+		label.text = \"Completed: \" + str(levels_completed)
+		easy_level_choices = SaveItem.easy_available_levels
+		difficult_level_choices = SaveItem.difficult_available_levels
+		if SaveItem.need_to_reset_level == true:
+			reset_last_level()
+		else:
+			for i in TileArray.size():
+				TileArray[i].needsToBeReset = false
+
+
+func _physics_process(delta):
+	#when the select action is pressed
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		#loop through the array of tiles and check some things
+		for i in TileArray.size():
+			#first check if the cursor position is the same as any of the tiles in the array
+			if userSelectionMarker.position == TileArray[i].position:
+				#if they are check if that tile has been selected and if it is the escape space, if yes start an escape space level
+				#if the tile is the revealed escape tile take the player to the escape map
+				if TileArray[i].hasBeenSelected == true and TileArray[i].isEscapeSpace == true:
+					choose_escape_world()
+					
+				#check if the level can be selected and if so process it
+				if TileArray[i].canBeSelected == true and TileArray[i].hasBeenSelected == false:
+					TileArray[i].get_child(0).texture = MapSprite
+					TileArray[i].get_child(0).region_rect.position = TileArray[i].MapTileImgPosition
+					TileArray[i].hasBeenSelected = true
+					#set the last selected level to the number of the currently processed tile for reset capabilities if necessary
+					SaveItem.last_selected_level = i
+					#make the surrounding tiles able to be selected
+					#check the tile to the right
+					if TileArray[i].MapSquareNum + 1 < 16:
+						var tileToTheRight = TileArray[i].MapSquareNum + 1
+						if TileArray[tileToTheRight].hasBeenSelected == false:
+							#certain numbers cannot be accessed to the right because the numbers wrap from left to right
+							if tileToTheRight != 4 and tileToTheRight != 8 and tileToTheRight != 12 and tileToTheRight != 16:
+								if TileArray[tileToTheRight].canBeSelected != true:
+									TileArray[tileToTheRight].canBeSelected = true
+									TileArray[tileToTheRight].get_child(0).texture = QuestionMark
+									TileArray[tileToTheRight].needsToBeReset = true
+								#store the save data and transition to the game scene for the map that has been selected
+								
+					#check the tile to the left
+					if TileArray[i].MapSquareNum - 1 > 0:
+						var tileToTheLeft = TileArray[i].MapSquareNum - 1
+						if TileArray[tileToTheLeft].hasBeenSelected == false:
+							#certain numbers cannot be accessed to the left because of number wrap
+							if tileToTheLeft != 0 and tileToTheLeft != 3 and tileToTheLeft != 7 and tileToTheLeft != 11:
+								if TileArray[tileToTheLeft].canBeSelected != true:
+									TileArray[tileToTheLeft].canBeSelected = true
+									TileArray[tileToTheLeft].get_child(0).texture = QuestionMark
+									TileArray[tileToTheLeft].needsToBeReset = true
+					#check the tile below
+					if TileArray[i].MapSquareNum + 4 < 16:
+						var tileToTheBottom = TileArray[i].MapSquareNum + 4
+						if TileArray[tileToTheBottom].hasBeenSelected == false:
+							#cut any numbers on the bottom row because they cannot have a tile below them
+							if tileToTheBottom < 16:
+								if TileArray[tileToTheBottom].canBeSelected != true:
+									TileArray[tileToTheBottom].canBeSelected = true
+									TileArray[tileToTheBottom].get_child(0).texture = QuestionMark
+									TileArray[tileToTheBottom].needsToBeReset = true
+					#check the tile above
+					if TileArray[i].MapSquareNum - 4 > 0:
+						var tileToTheTop = TileArray[i].MapSquareNum - 4
+						if TileArray[tileToTheTop]. hasBeenSelected == false:
+							#cut any numbers below 0 because the top row cannot have a tile above it
+							if tileToTheTop > 0:
+								if TileArray[tileToTheTop].canBeSelected != true:
+									TileArray[tileToTheTop].canBeSelected = true
+									TileArray[tileToTheTop].get_child(0).texture = QuestionMark
+									TileArray[tileToTheTop].needsToBeReset = true
+					storeData(TileArray)
+					choose_level()
+
+func storeData(TileArray: Array):
+	if SaveItem.storedData != true:
+		SaveItem.storedData = true
+	for i in TileArray.size():
+		SaveItem.tileData[i][0] = TileArray[i].canBeSelected
+		SaveItem.tileData[i][1] = TileArray[i].hasBeenSelected
+		SaveItem.tileData[i][2] = TileArray[i].get_child(0).texture
+		SaveItem.tileData[i][3] = TileArray[i].MapTileImgPosition
+		SaveItem.tileData[i][4] = TileArray[i].isEscapeSpace
+		SaveItem.tileData[i][5] = TileArray[i].needsToBeReset
+		
+	SaveItem.selectorPosition = userSelectionMarker.position
+	SaveItem.levels_completed = levels_completed
+
+func choose_level():
+	TransitionSfx.menu_select.play()
+	#if levels completed is below a certain threshold only select from the easy choices
+	if SaveItem.levels_completed < 4:
+		var random_roll = randi_range(0, easy_level_choices.size() - 1)
+		SaveItem.easy_available_levels = easy_level_choices
+		SaveItem.difficult_available_levels = difficult_level_choices
+		match(easy_level_choices[random_roll]):
+				0:
+					SaveItem.easy_level_to_replace = 0
+					easy_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_01.tscn\")
+				1:
+					SaveItem.easy_level_to_replace = 1
+					easy_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_02.tscn\")
+				2:
+					SaveItem.easy_level_to_replace = 2
+					easy_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_03.tscn\")
+				3:
+					SaveItem.easy_level_to_replace = 3
+					easy_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_04.tscn\")
+				4:
+					SaveItem.easy_level_to_replace = 4
+					easy_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_17.tscn\")
+				5:
+					SaveItem.easy_level_to_replace = 5
+					easy_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_18.tscn\")
+	else:
+		var random_roll = randi_range(0, difficult_level_choices.size() - 1)
+		SaveItem.easy_available_levels = easy_level_choices
+		SaveItem.difficult_available_levels = difficult_level_choices
+		match(difficult_level_choices[random_roll]):
+				0:
+					SaveItem.difficult_level_to_replace = 0
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_05.tscn\")
+				1:
+					SaveItem.difficult_level_to_replace = 1
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_06.tscn\")
+				2:
+					SaveItem.difficult_level_to_replace = 2
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_07.tscn\")
+				3:
+					SaveItem.difficult_level_to_replace = 3
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_08.tscn\")
+				4:
+					SaveItem.difficult_level_to_replace = 4
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_09.tscn\")
+				5:
+					SaveItem.difficult_level_to_replace = 5
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_10.tscn\")
+				6:
+					SaveItem.difficult_level_to_replace = 6
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_11.tscn\")
+				7:
+					SaveItem.difficult_level_to_replace = 7
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_12.tscn\")
+				8:
+					SaveItem.difficult_level_to_replace = 8
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_13.tscn\")
+				9:
+					SaveItem.difficult_level_to_replace = 9
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_14.tscn\")
+				10:
+					SaveItem.difficult_level_to_replace = 10
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_15.tscn\")
+				11:
+					SaveItem.difficult_level_to_replace = 11
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_16.tscn\")
+				12:
+					SaveItem.difficult_level_to_replace = 12
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_16.tscn\")
+				13:
+					SaveItem.difficult_level_to_replace = 13
+					difficult_level_choices.remove_at(random_roll)
+					get_tree().change_scene_to_file(\"res://levels/world_19.tscn\")
+
+func set_escapeSpace():
+	var random_space = randi_range(0, 15)
+	if random_space == 0 || random_space == 1 || random_space == 4:
+		set_escapeSpace()
+		return
+	TileArray[random_space].isEscapeSpace = true
+	
+
+func reset_last_level():
+	TileArray[SaveItem.last_selected_level].hasBeenSelected = false
+	TileArray[SaveItem.last_selected_level].get_child(0).texture = QuestionMark
+	TileArray[SaveItem.last_selected_level].get_child(0).region_rect.position = Vector2(0,0)
+	levels_completed -= 1
+	SaveItem.levels_completed = levels_completed
+	label.text = \"Completed: \" + str(levels_completed)
+	SaveItem.need_to_reset_level = false
+	SaveItem.last_selected_level = null
+	easy_level_choices = SaveItem.easy_available_levels
+	difficult_level_choices = SaveItem.difficult_available_levels
+	reset_unsuccessful_tiles()
+
+func reset_unsuccessful_tiles():
+	for i in TileArray.size():
+			if TileArray[i].needsToBeReset == true:
+				TileArray[i].canBeSelected = false
+				TileArray[i].get_child(0).texture = BlankTile
+				TileArray[i].needsToBeReset == false
+	#replace the failed level back into the level array
+	if SaveItem.easy_level_to_replace != null:
+		easy_level_choices.append(SaveItem.easy_level_to_replace)
+		SaveItem.easy_level_to_replace = null
+	if SaveItem.difficult_level_to_replace != null:
+		difficult_level_choices.append(SaveItem.difficult_level_to_replace)
+		SaveItem.difficult_level_to_replace = null
+
+func initialize_level_choices():
+	SaveItem.easy_available_levels = []
+	for i in 5:
+		easy_level_choices.append(i)
+	SaveItem.difficult_available_levels = []
+	for i in 14:
+		difficult_level_choices.append(i)
+
+func choose_escape_world():
+	var escape_space_roll = randi_range(0,1)
+	TransitionSfx.menu_select.play()
+	if escape_space_roll == 0:
+		get_tree().change_scene_to_file(\"res://levels/escape_world_01.tscn\")
+	if escape_space_roll == 1:
+		get_tree().change_scene_to_file(\"res://levels/escape_world_02.tscn\")
+"
+
+[node name="menu" type="Node2D"]
+position = Vector2(128, 58)
+script = SubResource("GDScript_1ou0b")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_left = -143.0
+offset_top = -70.0
+offset_right = 206.0
+offset_bottom = 135.0
+color = Color(0.109804, 0.0941176, 0.00392157, 1)
+
+[node name="ui_box_tilemap" parent="." instance=ExtResource("1_omrsp")]
+layer_0/tile_data = PackedInt32Array(-131076, 131072, 0, -65540, 655360, 1, -4, 196608, 7, -5, 196608, 7, -131078, 0, 0, -131077, 131072, 0, -65542, 0, 1, -65541, 524288, 1, -6, 0, 7, -3, 196608, 7, -131075, 131072, 0, -131074, 983040, 0, -65538, 983040, 1, -2, 983040, 7, -65539, 655360, 1)
+
+[node name="Label" type="Label" parent="ui_box_tilemap"]
+offset_left = -76.0
+offset_top = -37.0
+offset_right = -10.0
+offset_bottom = -7.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 8
+text = "Arrow keys
+to move"
+
+[node name="ui_box_tilemap2" parent="." instance=ExtResource("1_omrsp")]
+position = Vector2(-21, 81)
+layer_0/tile_data = PackedInt32Array(-131076, 131072, 0, -65540, 655360, 1, -4, 196608, 7, -5, 196608, 7, -131078, 0, 0, -131077, 131072, 0, -65542, 0, 1, -65541, 524288, 1, -6, 0, 7, -3, 196608, 7, -131075, 131072, 0, -131074, 983040, 0, -65538, 983040, 1, -2, 983040, 7, -65539, 655360, 1)
+
+[node name="Label" type="Label" parent="ui_box_tilemap2"]
+offset_left = -82.0
+offset_top = -37.0
+offset_right = -16.0
+offset_bottom = -7.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 8
+text = "Spacebar to
+select / jump"
+
+[node name="ui_box_tilemap3" parent="." instance=ExtResource("1_omrsp")]
+position = Vector2(185, 57)
+layer_0/tile_data = PackedInt32Array(-131076, 131072, 0, -65540, 655360, 1, -4, 196608, 7, -5, 196608, 7, -131078, 0, 0, -131077, 131072, 0, -65542, 0, 1, -65541, 524288, 1, -6, 0, 7, -3, 196608, 7, -131075, 131072, 0, -131074, 983040, 0, -65538, 983040, 1, -2, 983040, 7, -65539, 655360, 1)
+
+[node name="Label" type="Label" parent="ui_box_tilemap3"]
+offset_left = -89.0
+offset_top = -39.0
+offset_right = -23.0
+offset_bottom = -9.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 8
+text = "Completed: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="audio_players" parent="." instance=ExtResource("2_6imax")]

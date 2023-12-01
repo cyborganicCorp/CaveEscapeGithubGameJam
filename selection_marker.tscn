@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://rrkil5reanxc"]
+
+[ext_resource type="Texture2D" uid="uid://c6xebbqck8bq8" path="res://sprites/selectionMarkerPlaceholder.png" id="1_hmpaf"]
+[ext_resource type="Script" path="res://selection_marker.gd" id="1_w3kn0"]
+[ext_resource type="AudioStream" uid="uid://byo1lkm1hw3y4" path="res://audio/caveEscapeMenuBlip-11-9-23.wav" id="3_qs572"]
+
+[node name="SelectionMarker" type="Node2D"]
+z_index = 1
+script = ExtResource("1_w3kn0")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_hmpaf")
+centered = false
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_qs572")

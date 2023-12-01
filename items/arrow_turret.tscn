@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://djipl0bfiq2jd"]
+
+[ext_resource type="Texture2D" uid="uid://dd3f16ovf13i6" path="res://sprites/arrowTurret-11-20-23.png" id="1_0xh0u"]
+[ext_resource type="Script" path="res://items/arrow_turret.gd" id="1_6h0on"]
+[ext_resource type="PackedScene" uid="uid://c26akhhkehchy" path="res://items/arrow_projectile.tscn" id="2_w6l6f"]
+[ext_resource type="AudioStream" uid="uid://d2y4wm7264sk6" path="res://audio/caveEscapeArrowShootingSFX-11-29-23.wav" id="4_3q3tn"]
+
+[node name="arrow_turret" type="Node2D"]
+script = ExtResource("1_6h0on")
+arrow = ExtResource("2_w6l6f")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_0xh0u")
+
+[node name="spawn_point" type="Node2D" parent="."]
+position = Vector2(12, 0)
+
+[node name="Timer" type="Timer" parent="."]
+one_shot = true
+
+[node name="arrowTurretSFX" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_3q3tn")
+max_distance = 300.0
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
